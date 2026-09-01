@@ -24,7 +24,7 @@ Features:
   Fixkosten brechen diese Garantie unabhängig voneinander; ob im
   Einzelfall tatsächlich eine Ganzzahligkeitslücke auftritt, wird live
   geprüft und nicht nur behauptet.
-- Schichtplan-Gantt-Ansicht, PDF-Export, Permalink, Feedback-Mechanismus.
+- Schichtplan-Gantt-Ansicht, PDF-Export, Permalink.
 
 Selbe Struktur wie bei den anderen Demos in diesem Workspace: Ergebnis
 zuerst ("Ihr optimierter Schichtplan"), vollständiger Methodenvergleich
@@ -34,7 +34,7 @@ Formulierung" als eigene Expander.
 Lauffähig mit: streamlit run app.py
 
 Code-Struktur: Die eigentliche Logik (Modell, Solver, Kennzahlen, PDF-Export,
-Visualisierung, Feedback) liegt in den Modulen shift_*.py neben dieser Datei,
+Visualisierung) liegt in den Modulen shift_*.py neben dieser Datei,
 analog zu den anderen Demos in diesem Workspace.
 """
 
@@ -49,7 +49,6 @@ from shift_evaluation import (
     total_shifts,
     used_shift_types,
 )
-from shift_feedback import get_feedback_counts, log_feedback
 from shift_model import demand_curve, shift_catalog
 from shift_pdf_export import generate_shift_plan_pdf
 from shift_presets import (
@@ -487,19 +486,8 @@ LP-Lösung für die aktuelle Konfiguration ganzzahlig ist, wird nicht angenommen
     )
 
 st.markdown("---")
-st.caption("War diese Demo hilfreich?")
-fb_col1, fb_col2, _ = st.columns([1, 1, 4])
-with fb_col1:
-    if st.button("👍 Ja"):
-        log_feedback("up")
-        st.toast("Danke für Ihr Feedback!")
-with fb_col2:
-    if st.button("👎 Nein"):
-        log_feedback("down")
-        st.toast("Danke für Ihr Feedback!")
-
-st.markdown("---")
 st.caption(
-    "Diese Demo ist Teil des Portfolios von [Sebastian Hanisch](https://sebastianhanisch.net) - "
-    "Operations Research und Machine Learning."
+    "Diese Demo ist Teil des Portfolios von [Sebastian Hanisch](https://sebastianhanisch.net) – "
+    "Operations Research und Machine Learning. Interesse an einer maßgeschneiderten Lösung für "
+    "Ihr Unternehmen? [Kontakt aufnehmen](https://sebastianhanisch.net/kontakt.html)"
 )

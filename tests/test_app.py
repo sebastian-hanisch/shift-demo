@@ -153,8 +153,3 @@ def test_pdf_download_button_present():
     assert any("PDF" in b.label for b in at.download_button)
 
 
-def test_feedback_buttons_do_not_crash():
-    at = fresh_app()
-    up_btn = [b for b in at.button if "Ja" in b.label][0]
-    up_btn.click().run(timeout=TIMEOUT)
-    assert_ok(at)

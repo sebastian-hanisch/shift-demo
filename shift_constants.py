@@ -29,4 +29,3 @@ GAP_EXAMPLE = {
 }
 
 GREEDY_MAX_ITER = 5_000
-FEEDBACK_FILE = "feedback_log.csv"
