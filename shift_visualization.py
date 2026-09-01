@@ -29,6 +29,8 @@ def coverage_figure(demand, coverage, title):
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         xaxis=dict(tickmode="array", tickvals=tick_hours, ticktext=[f"{h:02d}:00" for h in tick_hours]),
     )
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
     return fig
 
 
@@ -75,6 +77,8 @@ def shift_gantt_figure(rows, title):
         margin=dict(l=10, r=10, t=40, b=10),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
     return fig
 
 
@@ -90,4 +94,6 @@ def fractional_bars_figure(rows, title):
         title=title, yaxis_title="x_j (Anzahl Personen, LP-Relaxierung)",
         height=320, margin=dict(l=10, r=10, t=40, b=10),
     )
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
     return fig
