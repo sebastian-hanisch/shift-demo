@@ -34,6 +34,25 @@ def test_default_load():
     assert len(at.metric) >= 5  # Greedy/ILP-Anzahl + LP/ILP/Lücke-Kacheln
 
 
+def test_structure_matches_sibling_demos():
+    """Die Demo soll wie die anderen Portfolio-Demos strukturiert sein:
+    Ergebnis zuerst, dann Methodenvergleich/Funktionsweise/Mathematik als
+    eigene Expander mit den üblichen Übertiteln."""
+    at = fresh_app()
+    assert_ok(at)
+    expander_labels = [e.label for e in at.expander]
+    assert any("vollständiger Methodenvergleich" in label for label in expander_labels)
+    assert any(label == "Wie funktioniert diese Demo?" for label in expander_labels)
+    assert any("Mathematische Formulierung" in label for label in expander_labels)
+    tab_labels = [t.label for t in at.tabs]
+    assert any("Greedy" in label for label in tab_labels)
+    assert any("LP-Relaxierung" in label for label in tab_labels)
+    assert any("ILP" in label for label in tab_labels)
+    assert any("Vergleich" in label for label in tab_labels)
+    assert len(at.dataframe) >= 1  # Methodenvergleich-Tabelle
+    assert any("optimierter Schichtplan" in md.value for md in at.markdown)
+
+
 @pytest.mark.parametrize("label", ["Einzelhandel (1 Spitze)", "Callcenter (2 Spitzen)", "Beispiel mit Ganzzahligkeitslücke"])
 def test_presets_apply_without_crash(label):
     at = fresh_app()
@@ -74,12 +93,47 @@ def test_regenerate_seed_button_changes_seed():
     assert seed_after != seed_before
 
 
-@pytest.mark.parametrize("shift_length", [3, 16])
-def test_shift_length_extremes(shift_length):
+@pytest.mark.parametrize("shift_lengths", [[3], [12], [3, 6, 12]])
+def test_shift_length_extremes(shift_lengths):
     at = fresh_app()
-    slider = [s for s in at.sidebar.slider if "Schichtlänge" in s.label][0]
-    slider.set_value(shift_length).run(timeout=TIMEOUT)
+    ms = at.sidebar.multiselect(key="shift_lengths_multiselect")
+    ms.set_value(shift_lengths).run(timeout=TIMEOUT)
     assert_ok(at)
+
+
+def test_empty_shift_lengths_shows_warning_without_crash():
+    at = fresh_app()
+    ms = at.sidebar.multiselect(key="shift_lengths_multiselect")
+    ms.set_value([]).run(timeout=TIMEOUT)
+    assert_ok(at)
+    assert any("mindestens eine Schichtlänge" in w.value for w in at.warning)
+
+
+def test_fixed_cost_slider_default_zero_shows_tu_success():
+    at = fresh_app()
+    assert_ok(at)
+    fixed_slider = [s for s in at.sidebar.slider if "Fixkosten" in s.label][0]
+    assert fixed_slider.value == 0.0
+    assert any("total unimodular" in s.value for s in at.success)
+
+
+def test_fixed_cost_slider_nonzero_replaces_tu_success_with_live_check():
+    at = fresh_app()
+    fixed_slider = [s for s in at.sidebar.slider if "Fixkosten" in s.label][0]
+    fixed_slider.set_value(500.0).run(timeout=TIMEOUT)
+    assert_ok(at)
+    assert not any("total unimodular" in s.value for s in at.success)
+    assert any("Fixkosten pro Schichttyp" in i.value for i in at.info) or any(
+        "Fixkosten pro Schichttyp" in w.value for w in at.warning
+    )
+
+
+def test_fixed_cost_shows_activated_shift_types_caption():
+    at = fresh_app()
+    fixed_slider = [s for s in at.sidebar.slider if "Fixkosten" in s.label][0]
+    fixed_slider.set_value(500.0).run(timeout=TIMEOUT)
+    assert_ok(at)
+    assert any("Genutzte Schichttypen" in c.value for c in at.caption)
 
 
 def test_no_peaks_and_no_base_demand_edge_case():

@@ -33,24 +33,36 @@ def demand_curve(n_peaks, peak_conc, seed, base_demand, peak_height):
     return np.round(d).astype(int)
 
 
-def shift_catalog(length, allow_wrap):
-    """Liste möglicher Schichten als (Start, Deckungs-Bitmaske über T Stunden).
+def shift_catalog(lengths, allow_wrap):
+    """Liste möglicher Schichten als (Start, Länge, Deckungs-Bitmaske über T Stunden).
 
-    Ohne Wraparound deckt jede Schicht einen zusammenhängenden Block ohne
-    Lücke innerhalb [0,T) ab (Intervallstruktur -> Nebenbedingungsmatrix
-    ist total unimodular). Mit Wraparound dürfen Schichten über Mitternacht
+    `lengths` ist eine oder mehrere Schichtlängen (ein einzelnes int wird als
+    Ein-Typ-Katalog behandelt). Für jede Länge werden alle Startzeiten erzeugt
+    und die Kataloge zusammengeführt - der Solver wählt anschließend frei aus
+    allen Schichttypen zusammen.
+
+    Ohne Wraparound deckt jede einzelne Schicht einen zusammenhängenden Block
+    ohne Lücke innerhalb [0,T) ab (Intervallstruktur -> Nebenbedingungsmatrix
+    ist total unimodular). Das gilt unabhängig davon, ob nur eine oder mehrere
+    Schichtlängen gleichzeitig im Katalog stehen, denn TU hängt an der Form
+    der einzelnen Schichten (zusammenhängender Block), nicht an einer
+    einheitlichen Länge. Mit Wraparound dürfen Schichten über Mitternacht
     hinweg laufen (z. B. 22-6 Uhr) - das Deckungsmuster ist dann im linearen
     Stundenraster nicht mehr zusammenhängend, die Intervalleigenschaft und
     damit die TU-Garantie entfällt.
     """
-    length = int(length)
+    if isinstance(lengths, int):
+        lengths = [lengths]
     shifts = []
-    starts = range(T) if allow_wrap else range(T - length + 1)
-    for s in starts:
-        cov = np.zeros(T, dtype=bool)
-        for k in range(length):
-            cov[(s + k) % T] = True
-        shifts.append({"start": s, "length": length, "wraps": (s + length) > T, "coverage": cov})
+    for length in lengths:
+        length = int(length)
+        starts = range(T) if allow_wrap else range(T - length + 1)
+        for s in starts:
+            cov = np.zeros(T, dtype=bool)
+            for k in range(length):
+                cov[(s + k) % T] = True
+            shifts.append({"start": s, "length": length, "wraps": (s + length) > T, "coverage": cov})
+    shifts.sort(key=lambda x: (x["length"], x["start"]))
     return shifts
 
 

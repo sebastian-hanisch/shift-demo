@@ -13,6 +13,14 @@ def total_shifts(counts):
     return float(sum(counts))
 
 
+def used_shift_types(shifts, counts, eps=1e-6):
+    """Sortierte Liste der Schichtlängen, die tatsächlich (auch nur
+    fraktional) genutzt werden - relevant, um sichtbar zu machen, wie viele
+    unterschiedliche Schichttypen aktiviert wurden (z. B. bei Fixkosten pro
+    Typ)."""
+    return sorted({s["length"] for s, c in zip(shifts, counts) if c > eps})
+
+
 def active_shift_instances(shifts, counts, round_counts=True):
     """Baut eine flache Liste einzelner Schicht-Instanzen (für Tabellen/Gantt).
 
