@@ -40,11 +40,11 @@ def generate_shift_plan_pdf(label, shifts, result, demand, cost_per_hour, fixed_
         types_str = ", ".join(f"{l}h" for l in active_types)
         pdf.cell(
             0, 6,
-            f"Davon Fixkosten: {fixed_cost_per_type * len(active_types):.0f} EUR fuer {len(active_types)} "
+            f"Davon Fixkosten: {fixed_cost_per_type * len(active_types):.0f} EUR für {len(active_types)} "
             f"genutzte Schichttypen ({types_str}), je {fixed_cost_per_type:.0f} EUR",
             new_x=XPos.LMARGIN, new_y=YPos.NEXT,
         )
-    pdf.cell(0, 6, f"Ueberdeckung: {overstaff:.0f} Personenstunden", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 6, f"Überdeckung: {overstaff:.0f} Personenstunden", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     if not result.is_integral:
         pdf.cell(0, 6, "Hinweis: LP-Relaxierung, Werte teils fraktional (siehe Detailtabelle unten)", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(4)
