@@ -212,7 +212,7 @@ if cost_savings_pct > 0.5:
 
 rows = active_shift_instances(shifts, ilp.counts)
 if rows:
-    st.plotly_chart(shift_gantt_figure(rows, "Besetzte Schichten über den Tag (ILP-Lösung)"), use_container_width=True)
+    st.plotly_chart(shift_gantt_figure(rows, "Besetzte Schichten über den Tag (ILP-Lösung)"), use_container_width=True, key="shift_gantt")
 
 if fixed_cost_per_type > 0:
     greedy_types = used_shift_types(shifts, greedy.counts)
@@ -288,7 +288,7 @@ else:
     )
     frac_rows = fractional_shift_rows(shifts, lp.counts)
     if frac_rows:
-        st.plotly_chart(fractional_bars_figure(frac_rows, "LP-Relaxierung: fraktionale Schicht-Anzahlen"), use_container_width=True)
+        st.plotly_chart(fractional_bars_figure(frac_rows, "LP-Relaxierung: fraktionale Schicht-Anzahlen"), use_container_width=True, key="fractional_bars")
 
 st.markdown("---")
 
@@ -305,7 +305,7 @@ with st.expander("🔧 Wie wir das erreichen – vollständiger Methodenvergleic
         g1.metric("Anzahl Schichten", f"{total_shifts(greedy.counts):.0f}")
         g2.metric("Kosten", f"{greedy.objective:,.0f} €")
         st.caption(f"Überdeckung: {overstaffing_hours(greedy.coverage, demand):.0f} Personenstunden.")
-        st.plotly_chart(coverage_figure(demand, greedy.coverage, "Greedy: Bedarf vs. Deckung"), use_container_width=True)
+        st.plotly_chart(coverage_figure(demand, greedy.coverage, "Greedy: Bedarf vs. Deckung"), use_container_width=True, key="coverage_greedy")
 
     with tabs[1]:
         st.caption(
@@ -316,7 +316,7 @@ with st.expander("🔧 Wie wir das erreichen – vollständiger Methodenvergleic
         l1, l2 = st.columns(2)
         l1.metric("Kosten", f"{lp.objective:,.1f} €")
         l2.metric("Ganzzahlig?", "Ja" if lp.is_integral else "Nein")
-        st.plotly_chart(coverage_figure(demand, lp.coverage, "LP-Relaxierung: Bedarf vs. Deckung"), use_container_width=True)
+        st.plotly_chart(coverage_figure(demand, lp.coverage, "LP-Relaxierung: Bedarf vs. Deckung"), use_container_width=True, key="coverage_lp")
 
     with tabs[2]:
         st.caption(
@@ -327,7 +327,7 @@ with st.expander("🔧 Wie wir das erreichen – vollständiger Methodenvergleic
         i1.metric("Anzahl Schichten", f"{total_shifts(ilp.counts):.0f}")
         i2.metric("Kosten", f"{ilp.objective:,.0f} €")
         st.caption(f"Überdeckung: {overstaffing_hours(ilp.coverage, demand):.0f} Personenstunden.")
-        st.plotly_chart(coverage_figure(demand, ilp.coverage, "ILP: Bedarf vs. Deckung"), use_container_width=True)
+        st.plotly_chart(coverage_figure(demand, ilp.coverage, "ILP: Bedarf vs. Deckung"), use_container_width=True, key="coverage_ilp")
 
     with tabs[3]:
         st.markdown("### Methodenvergleich")
@@ -345,7 +345,7 @@ with st.expander("🔧 Wie wir das erreichen – vollständiger Methodenvergleic
         for col, (label, result) in zip(vis_cols, [("Greedy", greedy), ("LP-Relaxierung", lp), ("ILP", ilp)]):
             with col:
                 st.markdown(f"**{label}**")
-                st.plotly_chart(coverage_figure(demand, result.coverage, label), use_container_width=True)
+                st.plotly_chart(coverage_figure(demand, result.coverage, label), use_container_width=True, key=f"coverage_compare_{label}")
 
 with st.expander("Wie funktioniert diese Demo?"):
     st.markdown(
