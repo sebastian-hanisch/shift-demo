@@ -9,6 +9,28 @@ def overstaffing_hours(coverage, demand):
     return float(np.maximum(coverage - demand, 0).sum())
 
 
+GAP_TOLERANCE = 0.01  # € - darunter gelten LP- und ILP-Kosten als gleich
+
+
+def classify_tu_check(tu_holds, gap, lp_is_integral, tol=GAP_TOLERANCE):
+    """Ordnet das Live-Ergebnis des TU-Checks einer von vier Aussagen zu:
+
+    - "tu": TU ist garantiert (kein Wraparound, keine Fixkosten).
+    - "gap": LP-Kosten liegen unter den ILP-Kosten - eine echte Ganzzahligkeits-
+      lücke. Maßgeblich sind die KOSTEN, nicht `lp_is_integral`: bei Fixkosten
+      kann die Schichtanzahl x ganzzahlig sein, während die Aktivierungs-
+      variable y fraktional ist und die LP trotzdem billiger bleibt.
+    - "no_gap_integral": keine Lücke, LP-Lösung ganzzahlig.
+    - "no_gap_fractional": keine Lücke, aber die LP-Lösung enthält fraktionale
+      Werte (alternative Optima: eine gleich teure ganzzahlige Lösung existiert).
+    """
+    if tu_holds:
+        return "tu"
+    if gap > tol:
+        return "gap"
+    return "no_gap_integral" if lp_is_integral else "no_gap_fractional"
+
+
 def total_shifts(counts):
     return float(sum(counts))
 

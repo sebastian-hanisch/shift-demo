@@ -122,7 +122,8 @@ def solve_greedy(shifts, demand, cost_per_hour, fixed_cost_per_type=0.0):
     einzelnen Schichtlänge (alle Kosten gleich) ist das identisch zum
     einfachen Greedy nach reiner Deckung. Liefert immer eine ganzzahlige,
     zulässige Lösung - aber ohne Optimalitätsgarantie (bekannter
-    Log-Approximationsfaktor für Set-Cover-artige Probleme).
+    Log-Approximationsfaktor für das reine Set Cover; die Fixkosten-Umlegung
+    unten ist davon nicht abgedeckt).
 
     Fixkosten pro Schichttyp werden auf die erste Nutzung einer Länge
     umgelegt: Solange eine Länge noch nicht aktiviert wurde, zählt ihre

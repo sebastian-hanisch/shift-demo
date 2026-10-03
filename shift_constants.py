@@ -14,7 +14,8 @@ DEFAULT_PEAK_HEIGHT = 8
 
 # Feste, geprüfte Kombination, die unter Wraparound zuverlässig eine
 # Ganzzahligkeitslücke zwischen LP-Relaxierung und ILP erzeugt (siehe
-# Prototyp-Suche: ~22% der Zufallskombinationen zeigen eine Lücke, diese
+# Prototyp-Suche: ~22% der Zufallskombinationen mit einer einzelnen
+# Schichtlänge zeigen eine Lücke, diese
 # hier ist eine der stärksten und daher als Beispiel-Preset hinterlegt).
 # Bewusst eine einzelne Schichtlänge, damit die Ganzzahligkeitslücke
 # eindeutig auf den Wraparound zurückzuführen ist und nicht auf das

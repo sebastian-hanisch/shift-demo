@@ -153,3 +153,33 @@ def test_pdf_download_button_present():
     assert any("PDF" in b.label for b in at.download_button)
 
 
+
+
+def _set_config(at, lengths, peaks, conc, seed, base, height, fixed, wrap):
+    at.sidebar.multiselect(key="shift_lengths_multiselect").set_value(lengths)
+    at.sidebar.slider(key="n_peaks_slider").set_value(peaks)
+    at.sidebar.slider(key="peak_conc_slider").set_value(conc)
+    at.sidebar.number_input(key="seed_input").set_value(seed)
+    at.sidebar.slider(key="base_demand_slider").set_value(base)
+    at.sidebar.slider(key="peak_height_slider").set_value(height)
+    at.sidebar.slider(key="fixed_cost_slider").set_value(fixed)
+    at.sidebar.checkbox(key="wrap_checkbox").set_value(wrap)
+    at.run(timeout=TIMEOUT)
+
+
+def test_cost_gap_with_integral_counts_shows_warning_not_info():
+    """Fixkosten, x ganzzahlig, aber LP billiger als ILP: Warnung statt "trotzdem ganzzahlig"."""
+    at = fresh_app()
+    _set_config(at, [10, 11], 2, 0.8, 875, 9, 8, 500.0, False)
+    assert_ok(at)
+    assert any("Ganzzahligkeitslücke gefunden" in w.value for w in at.warning)
+    assert not any("trotzdem ganzzahlig" in i.value for i in at.info)
+
+
+def test_fractional_lp_without_cost_gap_shows_info_not_gap_warning():
+    """Wraparound, LP fraktional aber gleich teuer: keine "Lücke gefunden ... 0,0 €"-Warnung."""
+    at = fresh_app()
+    _set_config(at, [6, 10], 3, 0.35, 655, 4, 17, 0.0, True)
+    assert_ok(at)
+    assert not any("Ganzzahligkeitslücke gefunden" in w.value for w in at.warning)
+    assert any("gleich teure ganzzahlige Lösung" in i.value for i in at.info)
