@@ -67,11 +67,11 @@ def shift_catalog(lengths, allow_wrap):
 
 
 def shift_label(start, length):
-    """ASCII-only Label - wird auch im PDF-Export verwendet, dessen
-    Core-Font (Helvetica) keine Sonderzeichen wie Halbgeviertstrich oder
-    Umlaute darstellen kann (siehe pack_pdf_export.py-Konvention: 'EUR'
-    statt Euro-Zeichen, 'ae/oe/ue' statt Umlaute, Bindestrich statt Gedankenstrich)."""
+    """Label ohne Sonderzeichen jenseits Latin-1 - wird auch im PDF-Export verwendet, dessen
+    Core-Font (Helvetica) keinen Halbgeviertstrich oder Euro-Zeichen darstellen kann
+    (siehe pack_pdf_export.py-Konvention: 'EUR' statt Euro-Zeichen, Bindestrich statt
+    Gedankenstrich); Umlaute sind in Latin-1 enthalten und erlaubt."""
     end = (start + length) % T
     wraps = (start + length) > T
-    suffix = " (ueber Mitternacht)" if wraps else ""
+    suffix = " (über Mitternacht)" if wraps else ""
     return f"{start:02d}:00-{end:02d}:00{suffix}"

@@ -116,7 +116,7 @@ with preset_col2:
     st.button(
         "☎️ Callcenter (2 Spitzen)", width="stretch",
         on_click=apply_preset, args=([4, 6], 2, 0.6, 7, 2, 6, False),
-        help="Vormittags- und Abend-Peak, Mix aus kürzeren 4h- und 6h-Schichten.",
+        help="Nachmittags- und Abend-Peak, Mix aus kürzeren 4h- und 6h-Schichten.",
     )
 with preset_col3:
     st.button(
@@ -366,7 +366,7 @@ Verlauf.
 
 **Greedy-Heuristik (Baseline):** Wählt wiederholt die Schicht mit dem besten Verhältnis aus
 abgedecktem Bedarfsüberhang zu Grenzkosten ("bester Gegenwert je Euro"), bis der gesamte Bedarf
-gedeckt ist. Liefert immer eine gültige, ganzzahlige Lösung in linearer Zeit - aber ohne
+gedeckt ist. Liefert immer eine gültige, ganzzahlige Lösung in polynomieller Zeit - aber ohne
 Optimalitätsgarantie (bekannter logarithmischer Approximationsfaktor für Set-Cover-artige
 Probleme). Sind Fixkosten pro Schichttyp aktiv, rechnet Greedy sie der jeweils ersten Instanz
 einer noch nicht genutzten Schichtlänge zu - das bestraft das unnötige Eröffnen eines neuen
@@ -488,6 +488,6 @@ LP-Lösung für die aktuelle Konfiguration ganzzahlig ist, wird nicht angenommen
 st.markdown("---")
 st.caption(
     "Diese Demo ist Teil des Portfolios von [Sebastian Hanisch](https://sebastianhanisch.net) – "
-    "Operations Research und Machine Learning. Interesse an einer maßgeschneiderten Lösung für "
-    "Ihr Unternehmen? [Kontakt aufnehmen](https://sebastianhanisch.net/kontakt.html)"
+    "Operations Research und Machine Learning ([Über mich](https://sebastianhanisch.net/ueber-mich.html)). "
+    "Mehr zum Thema: [Schichtplanung optimieren](https://sebastianhanisch.net/schichtplanung-optimierung.html)."
 )

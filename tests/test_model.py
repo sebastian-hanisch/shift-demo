@@ -100,7 +100,7 @@ def test_shift_catalog_single_int_equals_single_element_list():
 def test_shift_label_formats_wraparound():
     label = shift_label(22, 8)
     assert "22:00" in label
-    assert "ueber Mitternacht" in label
+    assert "über Mitternacht" in label
 
 
 # ==========================================================================
