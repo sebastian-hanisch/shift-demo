@@ -443,7 +443,7 @@ Determinante $0$, $+1$ oder $-1$ hat. Für reine Deckungsprobleme reicht dafür 
 **aufeinanderfolgenden Einsen** (d. h. ist $C_j$ ein zusammenhängendes Intervall), ist die Matrix
 eine Intervallmatrix und damit total unimodular - ein Standardresultat der ganzzahligen
 Optimierung (siehe z. B. Nemhauser & Wolsey, *Integer and Combinatorial Optimization*, 1988,
-Kap. I.2 zu Intervallmatrizen). Für TU-Matrizen sind bei ganzzahliger rechter Seite ($d_t \in
+Kap. III.1 „Integral Polyhedra“ zu total unimodularen Matrizen). Für TU-Matrizen sind bei ganzzahliger rechter Seite ($d_t \in
 \mathbb{Z}$) **alle Ecken des LP-Polyeders bereits ganzzahlig** - die LP-Relaxierung liefert also
 automatisch eine ganzzahlige Lösung, Branch & Bound ist streng genommen überflüssig.
 
