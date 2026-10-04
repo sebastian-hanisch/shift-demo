@@ -44,6 +44,7 @@ import streamlit as st
 from shift_constants import AVAILABLE_SHIFT_LENGTHS
 from shift_evaluation import (
     active_shift_instances,
+    classify_tu_check,
     fractional_shift_rows,
     overstaffing_hours,
     total_shifts,
@@ -254,32 +255,21 @@ tu_col2.metric("ILP (Kosten)", f"{ilp.objective:,.0f} €")
 tu_col3.metric("Ganzzahligkeitslücke", f"{gap:,.1f} €", delta=None if gap < 0.01 else "LP fraktional!", delta_color="inverse")
 
 tu_holds = not wrap and fixed_cost_per_type == 0
-if tu_holds:
+tu_state = classify_tu_check(tu_holds, gap, lp.is_integral)
+reasons = []
+if wrap:
+    reasons.append("Wraparound")
+if fixed_cost_per_type > 0:
+    reasons.append("Fixkosten pro Schichttyp")
+reason_text = " und ".join(reasons)
+
+if tu_state == "tu":
     st.success(
         "Ohne Wraparound und ohne Fixkosten pro Schichttyp ist die Matrix total unimodular: "
         f"LP-Relaxierung und ILP stimmen exakt überein ({lp.objective:,.0f} € = {ilp.objective:,.0f} €). "
         "Die LP-Lösung ist bereits ganzzahlig - kein Branch & Bound nötig."
     )
-elif lp.is_integral:
-    reasons = []
-    if wrap:
-        reasons.append("Wraparound")
-    if fixed_cost_per_type > 0:
-        reasons.append("Fixkosten pro Schichttyp")
-    reason_text = " und ".join(reasons)
-    st.info(
-        f"{reason_text} aktiv - TU ist nicht mehr garantiert, für diese konkrete Konfiguration ist "
-        "die LP-Lösung aber trotzdem ganzzahlig ausgefallen. Das ist kein Widerspruch: TU (bzw. eine "
-        "ganzzahlige LP-Lösung) ist eine hinreichende, keine notwendige Eigenschaft. Probieren Sie "
-        "andere Schichtlängen/Seeds oder das Preset „Beispiel mit Ganzzahligkeitslücke“."
-    )
-else:
-    reasons = []
-    if wrap:
-        reasons.append("Wraparound")
-    if fixed_cost_per_type > 0:
-        reasons.append("Fixkosten pro Schichttyp")
-    reason_text = " und ".join(reasons)
+elif tu_state == "gap":
     st.warning(
         f"Ganzzahligkeitslücke gefunden ({reason_text} aktiv): Die LP-Relaxierung ({lp.objective:,.1f} €) "
         f"unterschätzt das tatsächliche Optimum ({ilp.objective:,.0f} €) - {gap:,.1f} € Differenz. Die "
@@ -289,6 +279,20 @@ else:
     frac_rows = fractional_shift_rows(shifts, lp.counts)
     if frac_rows:
         st.plotly_chart(fractional_bars_figure(frac_rows, "LP-Relaxierung: fraktionale Schicht-Anzahlen"), width="stretch", key="fractional_bars")
+else:
+    if tu_state == "no_gap_integral":
+        detail = "Die LP-Lösung ist hier auch ganzzahlig. "
+    else:
+        detail = (
+            "Die LP-Lösung enthält zwar fraktionale Werte, ist aber nicht billiger als das ganzzahlige "
+            "Optimum (es gibt eine gleich teure ganzzahlige Lösung) - die Kosten zeigen keine Lücke. "
+        )
+    st.info(
+        f"{reason_text} aktiv - TU ist nicht mehr garantiert, für diese konkrete Konfiguration stimmen "
+        f"LP-Relaxierung und ILP aber überein ({lp.objective:,.0f} € = {ilp.objective:,.0f} €). {detail}"
+        "Das ist kein Widerspruch: TU ist eine hinreichende, keine notwendige Eigenschaft. Probieren Sie "
+        "andere Schichtlängen/Seeds oder das Preset „Beispiel mit Ganzzahligkeitslücke“."
+    )
 
 st.markdown("---")
 
@@ -366,9 +370,11 @@ Verlauf.
 
 **Greedy-Heuristik (Baseline):** Wählt wiederholt die Schicht mit dem besten Verhältnis aus
 abgedecktem Bedarfsüberhang zu Grenzkosten ("bester Gegenwert je Euro"), bis der gesamte Bedarf
-gedeckt ist. Liefert immer eine gültige, ganzzahlige Lösung in polynomieller Zeit - aber ohne
-Optimalitätsgarantie (bekannter logarithmischer Approximationsfaktor für Set-Cover-artige
-Probleme). Sind Fixkosten pro Schichttyp aktiv, rechnet Greedy sie der jeweils ersten Instanz
+gedeckt ist. Liefert immer eine gültige, ganzzahlige Lösung in polynomieller Zeit (je Iteration werden alle
+Schichten über alle 24 Stunden bewertet, höchstens Σ d_t Iterationen) - aber ohne
+Optimalitätsgarantie (für das reine Mengenüberdeckungsproblem ist ein logarithmischer
+Approximationsfaktor bekannt; die Fixkosten-Umlegung unten ist davon nicht abgedeckt - dort lag
+Greedy in Stichproben bis zu über 100 % über dem Optimum). Sind Fixkosten pro Schichttyp aktiv, rechnet Greedy sie der jeweils ersten Instanz
 einer noch nicht genutzten Schichtlänge zu - das bestraft das unnötige Eröffnen eines neuen
 Schichttyps.
 
@@ -450,8 +456,11 @@ automatisch eine ganzzahlige Lösung, Branch & Bound ist streng genommen überfl
 **Warum Wraparound die Garantie bricht:** Erlaubt man Schichten über Mitternacht hinweg, ist
 $C_j$ im linearen 24-Stunden-Raster kein zusammenhängendes Intervall mehr (es "umläuft" den Rand
 $t=23 \to t=0$) - die Intervalleigenschaft und damit die TU-Garantie entfällt. Ob das im
-Einzelfall tatsächlich zu einer fraktionalen LP-Lösung führt, hängt von der konkreten
-Bedarfskurve ab (siehe Textbeispiel unten) und wird in der Demo live geprüft.
+Einzelfall tatsächlich zu einer Ganzzahligkeitslücke führt, hängt von der konkreten
+Bedarfskurve und vom Schichtkatalog ab (siehe Textbeispiel unten) und wird in der Demo live
+geprüft. In Zufallsstichproben trat die Lücke bei Wraparound vor allem bei einer einzelnen
+Schichtlänge auf (rund 22 %); mit drei gleichzeitig gewählten Längen und ohne Fixkosten fand sich
+in 250 Stichproben keine.
 
 **Warum Fixkosten pro Schichttyp die Garantie brechen:** Die Kopplung $x_j \leq M_j \cdot
 y_{L(j)}$ zwischen einer kontinuierlichen und einer binären Variable ist eine klassische
@@ -461,7 +470,9 @@ Fixed-Charge-Problemen). Ein zusätzlicher Effekt kommt hinzu: Big-M-Formulierun
 typischerweise eine "lockere" LP-Relaxierung, weil $y_L$ kontinuierlich fast beliebig klein
 gewählt werden kann, solange $x_j \leq M_j \cdot y_L$ noch erfüllt ist - die Fixkosten werden in
 der Relaxierung dadurch künstlich klein gerechnet. Beides zusammen führt dazu, dass bei aktiven
-Fixkosten in der Praxis fast immer eine Ganzzahligkeitslücke auftritt, auch ganz ohne Wraparound.
+Fixkosten bei mehreren Schichtlängen in Stichproben in rund neun von zehn Fällen eine
+Ganzzahligkeitslücke auftritt, auch ganz ohne Wraparound (bei nur einer Schichtlänge, wo die
+Typwahl entfällt, deutlich seltener: rund ein Viertel der Fälle).
 
 **Kleines Lehrbuchbeispiel (Odd Cycle):** Drei Zeiteinheiten im Kreis, Bedarf 1 in jeder,
 Schichten decken je zwei aufeinanderfolgende (zyklische) Einheiten ab, Kosten 1 je Schicht -

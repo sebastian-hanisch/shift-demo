@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.abspath(APP_DIR))
 from shift_constants import GAP_EXAMPLE, T
 from shift_evaluation import (
     active_shift_instances,
+    classify_tu_check,
     fractional_shift_rows,
     overstaffing_hours,
     total_shifts,
@@ -329,3 +330,39 @@ def test_pdf_export_with_fixed_cost_returns_bytes(small_instance):
     result = solve_lp_or_ilp(shifts, demand, 100.0, integer=True, fixed_cost_per_type=200.0)
     pdf_bytes = generate_shift_plan_pdf("Test", shifts, result, demand, 100.0, fixed_cost_per_type=200.0)
     assert pdf_bytes[:4] == b"%PDF"
+
+
+# ==========================================================================
+# Live-TU-Check: Einordnung nach KOSTEN-Lücke, nicht nach x-Ganzzahligkeit
+# ==========================================================================
+
+def _solve_config(lengths, peaks, wrap, fixed):
+    demand = demand_curve(*peaks)
+    return solve_all(shift_catalog(lengths, wrap), demand, 30.0, fixed)
+
+
+def test_classify_tu_check_branches():
+    assert classify_tu_check(True, 0.0, True) == "tu"
+    assert classify_tu_check(False, 120.0, False) == "gap"
+    assert classify_tu_check(False, 120.0, True) == "gap"  # y fraktional, x ganzzahlig
+    assert classify_tu_check(False, 0.0, True) == "no_gap_integral"
+    assert classify_tu_check(False, 0.0, False) == "no_gap_fractional"
+
+
+def test_fixed_cost_gap_can_occur_with_integral_shift_counts():
+    """Fixkosten: x ganzzahlig (is_integral=True), aber LP billiger als ILP - die Einordnung
+    muss "gap" sein, nicht "ganzzahlig, trotzdem kein Problem"."""
+    res = _solve_config([10, 11], (2, 0.8, 875, 9, 8), False, 500.0)
+    gap = res["ilp"].objective - res["lp"].objective
+    assert res["lp"].is_integral
+    assert gap > 0.01
+    assert classify_tu_check(False, gap, res["lp"].is_integral) == "gap"
+
+
+def test_wraparound_fractional_lp_without_cost_gap_is_not_reported_as_gap():
+    """Wraparound: LP-Lösung fraktional, aber gleich teuer wie das ILP (alternative Optima)."""
+    res = _solve_config([6, 10], (3, 0.35, 655, 4, 17), True, 0.0)
+    gap = res["ilp"].objective - res["lp"].objective
+    assert not res["lp"].is_integral
+    assert gap <= 0.01
+    assert classify_tu_check(False, gap, res["lp"].is_integral) == "no_gap_fractional"
